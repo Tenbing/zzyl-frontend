@@ -43,3 +43,11 @@ export function delProject(id) {
   })
 }
 
+// 更新护理项目状态
+export function updateStatus(id) {
+  return request({
+    url: '/serve/project/' + id + '/status',
+    method: 'put'
+  })
+}
+

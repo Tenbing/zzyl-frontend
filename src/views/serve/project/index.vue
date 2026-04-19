@@ -70,10 +70,15 @@
     </el-row>
 
     <!-- 数据列表 -->
-    <el-table v-loading="loading" :data="projectList" @selection-change="handleSelectionChange">
-      <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="编号" align="center" prop="id" />
-      <el-table-column label="名称" align="center" prop="name" />
+    <el-table 
+      v-loading="loading" 
+      :data="projectList" 
+      @selection-change="handleSelectionChange"
+      show-overflow-tooltip
+      height="calc(100vh - 320px)">
+      <el-table-column type="selection" align="center" fixed="left"  width="55" />
+      <el-table-column label="序号" align="center" fixed="left" type="index" width="55" />
+      <el-table-column label="名称" align="center" prop="name" fixed="left" width="150" />
       <el-table-column label="排序号" align="center" prop="orderNo" />
       <el-table-column label="单位" align="center" prop="unit" />
       <el-table-column label="价格" align="center" prop="price" />
@@ -90,13 +95,20 @@
       </el-table-column>
       <el-table-column label="更新时间" align="center" prop="updateTime" width="180">
         <template #default="scope">
-          <span>{{ parseTime(scope.row.updateTime, '{y}-{m}-{d}') }}</span>
+          <span>{{ parseTime(scope.row.updateTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
+      <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="250" fixed="right">
         <template #default="scope">
           <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['serve:project:edit']">修改</el-button>
-          <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['serve:project:remove']">删除</el-button>
+          <el-button link type="danger" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['serve:project:remove']">删除</el-button>
+          <!-- 状态启禁用按钮 -->
+          <el-button 
+            link :type="scope.row.status == 0 ? 'success' : 'warning'" 
+            :icon="scope.row.status == 0 ? 'SuccessFilled' : 'CircleCloseFilled'" 
+            @click="handleEnable(scope.row)">
+            {{ scope.row.status == 0 ? '启用' : '禁用' }}
+          </el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -117,32 +129,33 @@
           <el-input v-model="form.name" placeholder="请输入名称" />
         </el-form-item>
         <el-form-item label="排序号" prop="orderNo">
-          <el-input v-model="form.orderNo" placeholder="请输入排序号" />
+          <el-input-number v-model="form.orderNo" :min="0" :max="100" placeholder="请输入排序号" />
         </el-form-item>
         <el-form-item label="单位" prop="unit">
           <el-input v-model="form.unit" placeholder="请输入单位" />
         </el-form-item>
         <el-form-item label="价格" prop="price">
-          <el-input v-model="form.price" placeholder="请输入价格" />
+          <el-input-number v-model="form.price" :min="1" :max="99999" placeholder="请输入价格" />
+        </el-form-item>
+        <el-form-item label="状态" prop="status">
+          <el-radio-group v-model="form.status" placeholder="请选择状态">
+            <el-radio 
+              v-for="dict in nursing_project_status" 
+              :key="dict.value" 
+              :label="dict.value" 
+              size="large">
+              {{  dict.label }}
+            </el-radio>
+          </el-radio-group>
         </el-form-item>
         <el-form-item label="图片" prop="image">
-          <image-upload v-model="form.image"/>
+          <image-upload v-model="form.image" limit="1"/>
         </el-form-item>
         <el-form-item label="护理要求" prop="nursingRequirement">
           <el-input v-model="form.nursingRequirement" placeholder="请输入护理要求" />
         </el-form-item>
-        <el-form-item label="状态" prop="status">
-          <el-select v-model="form.status" placeholder="请选择状态">
-            <el-option
-              v-for="dict in nursing_project_status"
-              :key="dict.value"
-              :label="dict.label"
-              :value="parseInt(dict.value)"
-            ></el-option>
-          </el-select>
-        </el-form-item>
         <el-form-item label="备注" prop="remark">
-          <el-input v-model="form.remark" placeholder="请输入备注" />
+          <el-input v-model="form.remark" placeholder="请输入备注" type="textarea" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -156,7 +169,7 @@
 </template>
 
 <script setup name="Project">
-import { listProject, getProject, delProject, addProject, updateProject } from "@/api/serve/project";
+import { listProject, getProject, delProject, addProject, updateProject, updateStatus } from "@/api/serve/project";
 
 const { proxy } = getCurrentInstance();
 const { nursing_project_status } = proxy.useDict('nursing_project_status');
@@ -274,6 +287,7 @@ function handleUpdate(row) {
   const _id = row.id || ids.value
   getProject(_id).then(response => {
     form.value = response.data;
+    form.value.status = form.value.status.toString();
     open.value = true;
     title.value = "修改护理项目";
   });
@@ -316,6 +330,19 @@ function handleExport() {
   proxy.download('serve/project/export', {
     ...queryParams.value
   }, `project_${new Date().getTime()}.xlsx`)
+}
+
+/** 状态启禁用按钮操作 */
+function handleEnable(row) {
+  const _id = row.id || ids.value;
+  const newStatus = row.status == 0 ? 1 : 0; // 切换状态
+  const action = newStatus == 0 ? '禁用' : '启用'; 
+  proxy.$modal.confirm(`是否确认${action}${row.name}？`).then(function() {
+    return updateStatus(_id);
+  }).then(() => {
+    getList();
+    proxy.$modal.msgSuccess(`${action}成功`);
+  }).catch(() => {});
 }
 
 getList();
