@@ -93,7 +93,13 @@ watch(() => props.modelValue, val => {
     // 然后将数组转为对象数组
     fileList.value = list.map(item => {
       if (typeof item === "string") {
-        if (item.indexOf(baseUrl) === -1) {
+        // 这里注释掉的是原来的本地存储图片地址处理方式，现在改为了oss存储
+        // if (item.indexOf(baseUrl) === -1) {
+        //   item = { name: baseUrl + item, url: baseUrl + item };
+        // } else {
+        //   item = { name: item, url: item };
+        // }
+        if (item.indexOf("http") === -1) {
           item = { name: baseUrl + item, url: baseUrl + item };
         } else {
           item = { name: item, url: item };

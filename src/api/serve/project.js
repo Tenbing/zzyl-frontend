@@ -51,3 +51,19 @@ export function updateStatus(id) {
   })
 }
 
+// 获取所有护理项目, 用于下拉列表
+export function getAllProject() {
+  return request({
+    url: '/serve/project/all',
+    method: 'get'
+  })
+}
+
+// 获取所有护理项目，用于下拉列表
+export function getAllProjects() {
+  return request({
+    url: '/serve/project/all',
+    method: 'get'
+  })
+}
+

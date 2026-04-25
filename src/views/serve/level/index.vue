@@ -122,27 +122,36 @@
         <el-form-item label="等级名称" prop="name">
           <el-input v-model="form.name" placeholder="请输入等级名称" />
         </el-form-item>
-        <el-form-item label="护理计划ID" prop="lplanId">
-          <el-input v-model="form.lplanId" placeholder="请输入护理计划ID" />
-        </el-form-item>
+            <el-form-item label="护理计划" prop="lplanId">
+              <el-select v-model="form.lplanId" placeholder="请选择护理计划" filterable clearable>
+                <el-option
+                  v-for="plan in planList"
+                  :key="plan.value"
+                  :label="plan.label"
+                  :value="plan.value"
+                />
+              </el-select>
+            </el-form-item>
         <el-form-item label="护理费用" prop="fee">
-          <el-input v-model="form.fee" placeholder="请输入护理费用" />
+          <!-- <el-input v-model="form.fee" placeholder="请输入护理费用" /> -->
+          <el-input-number v-model="form.fee" :min="0" :max="10000"></el-input-number>
         </el-form-item>
         <el-form-item label="状态" prop="status">
-          <el-select v-model="form.status" placeholder="请选择状态">
-            <el-option
-              v-for="dict in nursing_level_status"
-              :key="dict.value"
-              :label="dict.label"
-              :value="parseInt(dict.value)"
-            ></el-option>
-          </el-select>
+          <el-radio-group v-model="form.status">
+            <el-radio
+            v-for="dict in nursing_level_status"
+            :key="dict.value"
+            :label="dict.value"
+            size="large">
+              {{ dict.label }}
+            </el-radio>
+          </el-radio-group>
         </el-form-item>
         <el-form-item label="等级说明" prop="description">
           <el-input v-model="form.description" placeholder="请输入等级说明" />
         </el-form-item>
         <el-form-item label="备注" prop="remark">
-          <el-input v-model="form.remark" placeholder="请输入备注" />
+          <el-input v-model="form.remark" placeholder="请输入备注" type="textarea" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -157,11 +166,13 @@
 
 <script setup name="Level">
 import { listLevel, getLevel, delLevel, addLevel, updateLevel, updateStatus } from "@/api/serve/level";
+import { getAllPlan } from "@/api/serve/plan";
 
 const { proxy } = getCurrentInstance();
 const { nursing_level_status } = proxy.useDict('nursing_level_status');
 
 const levelList = ref([]);
+const planList = ref([]);
 const open = ref(false);
 const loading = ref(true);
 const showSearch = ref(true);
@@ -260,6 +271,8 @@ function handleUpdate(row) {
   const _id = row.id || ids.value
   getLevel(_id).then(response => {
     form.value = response.data;
+    form.value.status = form.value.status.toString();
+    form.value.lplanId = form.value.lplanId.toString();
     open.value = true;
     title.value = "修改护理等级";
   });
@@ -317,5 +330,16 @@ function handleExport() {
   }, `level_${new Date().getTime()}.xlsx`)
 }
 
+/** 获取护理计划列表 */
+function getPlanList() {
+  getAllPlan().then(response => {
+    const list = response.data || response.rows || [];
+    planList.value = list.map(p => ({ label: p.label, value: String(p.value) }));
+  }).catch(() => {
+    planList.value = [];
+  });
+}
+
 getList();
+getPlanList();
 </script>

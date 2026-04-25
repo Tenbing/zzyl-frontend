@@ -265,8 +265,16 @@ function handleSelectionChange(selection) {
 }
 /** 修改按钮操作 */
 function handleEditTable(row) {
-  const tableId = row.tableId || ids.value[0];
-  router.push({ path: "/tool/gen-edit/index/" + tableId, query: { pageNum: queryParams.value.pageNum } });
+  const tableId = row?.tableId || row?.id || ids.value[0];
+  if (!tableId) {
+    proxy.$modal.msgError("未获取到表ID，请刷新后重试");
+    return;
+  }
+  router.push({
+    name: "GenEdit",
+    params: { tableId: String(tableId) },
+    query: { pageNum: queryParams.value.pageNum }
+  });
 }
 /** 删除按钮操作 */
 function handleDelete(row) {

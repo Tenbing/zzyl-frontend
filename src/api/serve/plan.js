@@ -1,7 +1,7 @@
 import request from '@/utils/request'
 
 // 查询护理计划列表
-export function listPlan(query) {
+export function listNursingPlan(query) {
   return request({
     url: '/serve/plan/list',
     method: 'get',
@@ -10,7 +10,7 @@ export function listPlan(query) {
 }
 
 // 查询护理计划详细
-export function getPlan(id) {
+export function getNursingPlan(id) {
   return request({
     url: '/serve/plan/' + id,
     method: 'get'
@@ -18,7 +18,7 @@ export function getPlan(id) {
 }
 
 // 新增护理计划
-export function addPlan(data) {
+export function addNursingPlan(data) {
   return request({
     url: '/serve/plan',
     method: 'post',
@@ -27,7 +27,16 @@ export function addPlan(data) {
 }
 
 // 修改护理计划
-export function updatePlan(data) {
+export function updateNursingPlan(data) {
+  return request({
+    url: '/serve/plan',
+    method: 'put',
+    data: data
+  })
+}
+
+// 修改护理计划状态
+export function planStatus(data) {
   return request({
     url: '/serve/plan',
     method: 'put',
@@ -36,17 +45,17 @@ export function updatePlan(data) {
 }
 
 // 删除护理计划
-export function delPlan(id) {
+export function delNursingPlan(id) {
   return request({
     url: '/serve/plan/' + id,
     method: 'delete'
   })
 }
 
-// 更新护理计划状态
-export function updateStatus(id) {
+// 查询所有护理计划，用于选择框
+export function getAllPlan() {
   return request({
-    url: '/serve/plan/' + id + '/status',
-    method: 'put'
+    url: '/serve/plan/all',
+    method: 'get'
   })
 }
