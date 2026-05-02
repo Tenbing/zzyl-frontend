@@ -50,3 +50,11 @@ export function updateStatus(id) {
     method: 'put'
   })
 }
+
+// 查询所有护理等级
+export function getAllLevels() {
+  return request({
+    url: '/serve/level/all',
+    method: 'get'
+  })
+}
