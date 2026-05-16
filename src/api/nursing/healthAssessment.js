@@ -22,7 +22,8 @@ export function addHealthAssessment(data) {
   return request({
     url: '/nursing/healthAssessment',
     method: 'post',
-    data: data
+    data: data,
+    timeout: 90000
   })
 }
 
